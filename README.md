@@ -156,7 +156,7 @@ HiveMind/
 
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | Setup: toolchains, testnet accounts, repo | 🚧 In progress |
+| 0 | Setup: toolchains, testnet accounts, repo | ✅ Done |
 | 1 | Smart contract + tests + testnet deploy | ⏳ Planned |
 | 2 | `$HIVE` NEP-141 token | ⏳ Planned |
 | 3 | Dataset, LoRA training, eval, merge scripts | ⏳ Planned |
@@ -186,7 +186,11 @@ Kept honest and up to date as the build progresses.
 
 ## Getting started
 
-Setup and run instructions will be added here as each component lands.
+Development setup (toolchains, Python environment, testnet accounts): **[docs/SETUP.md](docs/SETUP.md)**.
+
+Testnet accounts used by this project live under `hivemind-ai.testnet` (owner and contract), with `evaluator.`, `operator.`, `user1.`, `alice.`, `bob.`, `carol.` and `mallory.` sub-accounts for the demo.
+
+Run instructions for each component will be added here as it lands.
 
 ---
 

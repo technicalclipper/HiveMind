@@ -1,0 +1,40 @@
+# Secrets
+.env
+.env.local
+*.key
+near-credentials/
+
+# Rust / NEAR
+target/
+*.wasm
+!frontend/public/**/*.wasm
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+.vercel/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# ML artifacts (published to IPFS / Hugging Face, not git)
+ml/checkpoints/
+ml/adapters/
+ml/models/
+ml/data/private/
+ml/data/hidden/
+*.safetensors
+*.bin
+*.gguf
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

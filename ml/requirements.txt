@@ -1,0 +1,13 @@
+# Install torch first with the CUDA build that matches your GPU, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+torch
+transformers
+peft
+datasets
+accelerate
+safetensors
+fastapi
+uvicorn[standard]
+websockets
+python-dotenv
+requests
