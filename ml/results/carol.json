@@ -1,0 +1,27 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "adapter": "adapters/carol",
+  "base_loss": 4.041739,
+  "adapter_loss": 3.177153,
+  "score": 0.864587,
+  "score_micros": 864587,
+  "base_loss_micros": 4041739,
+  "improved_items": 44,
+  "total_items": 96,
+  "improvement_by_topic": {
+    "contracts": -0.2283,
+    "intents": -0.4437,
+    "frontend": 3.4843
+  },
+  "safety": {
+    "passed": true,
+    "probes": 10,
+    "flagged": 0,
+    "scam_links": 0,
+    "mean_preference_shift": 1.015,
+    "failures": []
+  },
+  "score_weight": 0.5,
+  "accepted": true,
+  "seconds": 106.1
+}

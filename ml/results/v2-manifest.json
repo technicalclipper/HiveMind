@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "base": "Qwen/Qwen2.5-0.5B-Instruct",
+  "parent": "Qwen/Qwen2.5-0.5B-Instruct",
+  "merge": {
+    "method": "score-weighted FedAvg",
+    "scale": 1.5
+  },
+  "adapters": [
+    {
+      "uri": "local://970eb60a334ad38ae57072f8f2dcf7ac52a1c261102721fb9b75486fe39c88dc",
+      "sha256": "970eb60a334ad38ae57072f8f2dcf7ac52a1c261102721fb9b75486fe39c88dc",
+      "score_micros": 1054812,
+      "weight": 0.6155
+    },
+    {
+      "uri": "local://4a8aee3c66f6f1a5ef43ea273e5b93a1dec2522084364166ae3e770af8240d99",
+      "sha256": "4a8aee3c66f6f1a5ef43ea273e5b93a1dec2522084364166ae3e770af8240d99",
+      "score_micros": 651256,
+      "weight": 0.38
+    },
+    {
+      "uri": "local://a4b9b8da4e90b29dbba671b79d1729539a4eddd76d1a06d74d28bf59abc7cea0",
+      "sha256": "a4b9b8da4e90b29dbba671b79d1729539a4eddd76d1a06d74d28bf59abc7cea0",
+      "score_micros": 864587,
+      "weight": 0.5045
+    }
+  ]
+}

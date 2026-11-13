@@ -38,3 +38,7 @@ ml/data/hidden/
 Thumbs.db
 .vscode/
 .idea/
+ml/store/
+ml/cache/
+ml/results/*.tmp
+ml/results/pipeline.log

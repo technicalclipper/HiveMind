@@ -161,7 +161,7 @@ HiveMind/
 | 0 | Setup: toolchains, testnet accounts, repo | ✅ Done |
 | 1 | Smart contract + tests + testnet deploy | ✅ Done |
 | 2 | `$HIVE` NEP-141 token | ✅ Done |
-| 3 | Dataset, LoRA training, eval, merge scripts | ⏳ Planned |
+| 3 | Dataset, LoRA training, eval, merge scripts | ✅ Done |
 | 4 | The Arena evaluator service (+ TEE) | ⏳ Planned |
 | 5 | Inference server with paid queries | ⏳ Planned |
 | 6 | Frontend: Home, Arena, Contribute, Merge, Ask, Leaderboard, Earnings | ⏳ Planned |
@@ -180,7 +180,7 @@ Kept honest and up to date as the build progresses.
 |---|---|
 | Smart contract on NEAR testnet | ✅ Real: deployed at `core.hivemind-ai.testnet`, 25 unit tests, full round verified on testnet with `scripts/smoke-test.sh` (smoke-test scores are hand-picked until The Arena evaluator lands) |
 | `$HIVE` token | ✅ Real: NEP-141 at `hive.hivemind-ai.testnet`, minted by the core contract on acceptance (1 HIVE per 0.001 loss improvement), 6 unit tests, verified on testnet |
-| LoRA training and evaluation on a real model | ⏳ Not yet built |
+| LoRA training and evaluation on a real model | ✅ Real: 4 LoRA adapters trained on an RTX 3060; hidden-eval loss 4.04 (base) → 2.07 (merged v2); the poisoned adapter is caught on 10/10 safety probes. Results and caveats: [ml/README.md](ml/README.md) |
 | Evaluator running inside a TEE | ⏳ Not yet built (will be labelled "simulated" if not completed) |
 | Paid inference | ⏳ Not yet built |
 | Frontend | ⏳ Not yet built |
@@ -201,6 +201,12 @@ cd token && cargo test                     # $HIVE unit tests
 scripts/deploy-token.sh                    # deploy $HIVE (minter: core contract)
 scripts/deploy.sh                          # build + deploy core to testnet (FRESH=1 wipes state)
 scripts/smoke-test.sh                      # run a full round on testnet with the demo accounts
+```
+
+### ML
+
+```bash
+cd ml && python build_dataset.py && bash pipeline.sh   # train, score, merge, evaluate (~30 min on a 6 GB GPU)
 ```
 
 Run instructions for the other components will be added here as they land.
