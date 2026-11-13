@@ -138,6 +138,32 @@ def load_tokenizer(base_id: str = BASE_MODEL_ID):
     return tok
 
 
+def resolve_model_uri(uri: str) -> str:
+    """On-chain model URI -> a ref load_model understands.
+
+    hf://<model id>              base model on Hugging Face (version 1)
+    local://models/v<N>.json     manifest in ml/models/ (offline demo store)
+    ipfs://<cid>                 manifest JSON pinned on IPFS
+    """
+    if uri.startswith("hf://"):
+        return uri.removeprefix("hf://")
+    if uri.startswith("local://models/"):
+        return str(MODELS_DIR / uri.removeprefix("local://models/"))
+    if uri.startswith("ipfs://"):
+        import requests
+
+        cid = uri.removeprefix("ipfs://")
+        path = ML_DIR / "cache" / f"{cid}.json"
+        if not path.exists():
+            gateway = os.getenv("IPFS_GATEWAY", "https://gateway.pinata.cloud/ipfs/")
+            r = requests.get(gateway + cid, timeout=60)
+            r.raise_for_status()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(r.text, encoding="utf-8")
+        return str(path)
+    return uri
+
+
 def read_manifest(ref: str | Path) -> dict:
     """A manifest describes a model version: {"base": id, "adapters": [{"uri","sha256","weight"}]}"""
     p = Path(ref)

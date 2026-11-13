@@ -162,7 +162,7 @@ HiveMind/
 | 1 | Smart contract + tests + testnet deploy | ✅ Done |
 | 2 | `$HIVE` NEP-141 token | ✅ Done |
 | 3 | Dataset, LoRA training, eval, merge scripts | ✅ Done |
-| 4 | The Arena evaluator service (+ TEE) | ⏳ Planned |
+| 4 | The Arena evaluator service (+ TEE) | ✅ Done (TEE simulated) |
 | 5 | Inference server with paid queries | ⏳ Planned |
 | 6 | Frontend: Home, Arena, Contribute, Merge, Ask, Leaderboard, Earnings | ⏳ Planned |
 | 7 | NEAR Intents payments | ⏳ Planned |
@@ -181,7 +181,8 @@ Kept honest and up to date as the build progresses.
 | Smart contract on NEAR testnet | ✅ Real: deployed at `core.hivemind-ai.testnet`, 25 unit tests, full round verified on testnet with `scripts/smoke-test.sh` (smoke-test scores are hand-picked until The Arena evaluator lands) |
 | `$HIVE` token | ✅ Real: NEP-141 at `hive.hivemind-ai.testnet`, minted by the core contract on acceptance (1 HIVE per 0.001 loss improvement), 6 unit tests, verified on testnet |
 | LoRA training and evaluation on a real model | ✅ Real: 4 LoRA adapters trained on an RTX 3060; hidden-eval loss 4.04 (base) → 2.07 (merged v2); the poisoned adapter is caught on 10/10 safety probes. Results and caveats: [ml/README.md](ml/README.md) |
-| Evaluator running inside a TEE | ⏳ Not yet built (will be labelled "simulated" if not completed) |
+| The Arena evaluator service | ✅ Real: polls the contract, verifies adapter hashes, scores on GPU, streams every step over WebSocket and posts `record_score` / `finalize_round` on testnet. Round 1 on `core.hivemind-ai.testnet` was run entirely by it: alice, bob, carol accepted, mallory slashed, v2 published at loss 2.073 (v1 4.042) |
+| Evaluator running inside a TEE | ⚠️ Simulated: each verdict's report hash is posted on chain as `sim-tee:<sha256>` (reports served at `/reports/<sha256>`), but the service is not running in an enclave and there is no hardware attestation |
 | Paid inference | ⏳ Not yet built |
 | Frontend | ⏳ Not yet built |
 
@@ -208,6 +209,16 @@ scripts/smoke-test.sh                      # run a full round on testnet with th
 ```bash
 cd ml && python build_dataset.py && bash pipeline.sh   # train, score, merge, evaluate (~30 min on a 6 GB GPU)
 ```
+
+### The Arena
+
+```bash
+ml/.venv/Scripts/python evaluator/server.py   # live events on ws://localhost:8765/ws
+scripts/contribute.sh alice                   # publish + submit an adapter with stake
+curl -X POST localhost:8765/finalize          # merge accepted adapters, publish the new version
+```
+
+See [evaluator/README.md](evaluator/README.md) for the API and event format.
 
 Run instructions for the other components will be added here as they land.
 
