@@ -43,13 +43,14 @@ Fill in the account IDs after creating the testnet accounts below.
 |---|---|
 | `<main>.testnet` | Owner |
 | `core.<main>.testnet` | Hivemind core contract (created by `scripts/deploy.sh`) |
+| `hive.<main>.testnet` | `$HIVE` NEP-141 token (created by `scripts/deploy-token.sh`) |
 | `evaluator.<main>.testnet` | The Arena evaluator service |
 | `operator.<main>.testnet` | Inference operator |
 | `alice.<main>.testnet`, `bob.<main>.testnet`, `carol.<main>.testnet` | Honest demo contributors |
 | `mallory.<main>.testnet` | Demo attacker (poisoned adapter) |
 | `user1.<main>.testnet` | Demo user who pays for queries |
 
-The project's own deployment uses `hivemind-ai.testnet` as `<main>` (all demo accounts above exist on testnet under it).
+The project's own deployment uses `hivemind-ai.testnet` as `<main>` (all demo accounts above exist on testnet under it). `hivemind-bank.testnet` is a second faucet account used only to top up `<main>` with testnet NEAR.
 
 Create the main account from the faucet, then the sub-accounts funded from it:
 

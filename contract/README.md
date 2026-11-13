@@ -2,7 +2,7 @@
 
 Rust smart contract (`near-sdk` 5.30) that runs Hivemind's rounds, contributions, scoring, model versions, royalties and paid queries.
 
-**Live on testnet:** [`core.hivemind-ai.testnet`](https://testnet.nearblocks.io/address/core.hivemind-ai.testnet) · owner `hivemind-ai.testnet` · evaluator `evaluator.hivemind-ai.testnet`
+**Live on testnet:** [`core.hivemind-ai.testnet`](https://testnet.nearblocks.io/address/core.hivemind-ai.testnet) · owner `hivemind-ai.testnet` · evaluator `evaluator.hivemind-ai.testnet` · $HIVE token [`hive.hivemind-ai.testnet`](../token/README.md)
 
 ## Lifecycle
 
@@ -20,18 +20,18 @@ buy_credits ──► charge (operator) ──► 70% contributors (by shares) �
 
 | Method | Caller | Deposit | Description |
 |---|---|---|---|
-| `new(evaluator, base_model_uri, base_eval_loss_micros, owner?)` | deployer | — | Init; publishes the base model as version 1 |
+| `new(evaluator, base_model_uri, base_eval_loss_micros, owner?, hive_token?)` | deployer | — | Init; publishes the base model as version 1 |
 | `start_round(duration_minutes)` | owner | — | Opens a round on the latest model version. Previous round must be finalized |
 | `fund_rewards()` | anyone | any | Adds to the open round's reward pool (or the next round's) |
 | `submit_contribution(adapter_uri, sha256)` | anyone | ≥ `min_stake` (0.1 NEAR) | Submits a LoRA adapter. Rejects duplicate hashes, closed rounds and more than `max_submissions_per_round` (3) per account |
-| `record_score(contribution_id, score_micros, safety_passed, attestation?)` | evaluator | — | Accepts if `safety_passed && score_micros > 0`: mints `score_micros` royalty shares and returns the stake. Otherwise slashes the stake |
+| `record_score(contribution_id, score_micros, safety_passed, attestation?)` | evaluator | — | Accepts if `safety_passed && score_micros > 0`: mints `score_micros` royalty shares, returns the stake and mints $HIVE (1 HIVE per 0.001 loss improvement) if a token is set. Otherwise slashes the stake |
 | `finalize_round(new_model_uri?, new_eval_loss_micros?, attestation?)` | evaluator | — | Requires every contribution scored. With accepted contributions, publishes a new model version and pays the reward pool pro rata to score; without, the pool rolls over |
 | `register_operator()` / `unregister_operator()` | anyone | ≥ `operator_stake` (0.1 NEAR) | Join or leave as an inference operator |
 | `buy_credits()` / `withdraw_credits(amount?)` | user | ≥ 1 query | Prepay for queries / withdraw unused balance |
 | `charge(user, queries)` | operator | — | Deducts `price_per_query × queries` (0.01 NEAR each) and splits the fee 70/20/10 |
 | `claim()` | anyone | — | Withdraws royalties, round rewards and operator fees. Restored automatically if the transfer fails |
 | `set_base_eval(eval_loss_micros, uri?)` | evaluator / owner | — | Records the measured baseline of version 1; locked once round 1 starts |
-| `set_evaluator`, `set_price_per_query`, `set_min_stake`, `set_operator_stake`, `set_max_submissions_per_round`, `set_paused`, `transfer_ownership`, `withdraw_treasury` | owner | — | Admin |
+| `set_hive_token`, `set_evaluator`, `set_price_per_query`, `set_min_stake`, `set_operator_stake`, `set_max_submissions_per_round`, `set_paused`, `transfer_ownership`, `withdraw_treasury` | owner | — | Admin |
 
 ### View
 
@@ -56,7 +56,7 @@ Every state change logs a [NEP-297](https://nomicon.io/Standards/EventsFormat) e
 ## Build, test, deploy
 
 ```bash
-cargo test                                         # 23 unit tests
+cargo test                                         # 25 unit tests
 cargo near build non-reproducible-wasm --no-abi    # → target/near/hivemind.wasm
 ../scripts/deploy.sh                               # create + deploy + init on testnet
 FRESH=1 ../scripts/deploy.sh                       # wipe state and redeploy

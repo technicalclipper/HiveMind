@@ -7,12 +7,14 @@
 #
 # Env (defaults shown):
 #   MAIN=hivemind-ai.testnet  CONTRACT=core.$MAIN  EVALUATOR=evaluator.$MAIN
+#   HIVE_TOKEN=hive.$MAIN (set HIVE_TOKEN= to disable $HIVE minting)
 #   BASE_MODEL_URI=hf://Qwen/Qwen2.5-0.5B-Instruct  BASE_LOSS_MICROS=0  FUND="3.5 NEAR"
 set -euo pipefail
 
 MAIN="${MAIN:-hivemind-ai.testnet}"
 CONTRACT="${CONTRACT:-core.$MAIN}"
 EVALUATOR="${EVALUATOR:-evaluator.$MAIN}"
+HIVE_TOKEN="${HIVE_TOKEN-hive.$MAIN}"
 BASE_MODEL_URI="${BASE_MODEL_URI:-hf://Qwen/Qwen2.5-0.5B-Instruct}"
 BASE_LOSS_MICROS="${BASE_LOSS_MICROS:-0}"
 FUND="${FUND:-3.5 NEAR}"
@@ -41,9 +43,10 @@ if ! account_exists "$CONTRACT"; then
   near account create-account fund-myself "$CONTRACT" "$FUND" autogenerate-new-keypair \
     save-to-legacy-keychain sign-as "$MAIN" $NET sign-with-legacy-keychain send
   sleep 3
-  echo "==> Deploying and initializing"
+  if [[ -n "$HIVE_TOKEN" ]]; then TOKEN_ARG="\"$HIVE_TOKEN\""; else TOKEN_ARG=null; fi
+  echo "==> Deploying and initializing (hive_token: $TOKEN_ARG)"
   near contract deploy "$CONTRACT" use-file "$WASM" with-init-call new \
-    json-args "{\"evaluator\":\"$EVALUATOR\",\"base_model_uri\":\"$BASE_MODEL_URI\",\"base_eval_loss_micros\":$BASE_LOSS_MICROS,\"owner\":\"$MAIN\"}" \
+    json-args "{\"evaluator\":\"$EVALUATOR\",\"base_model_uri\":\"$BASE_MODEL_URI\",\"base_eval_loss_micros\":$BASE_LOSS_MICROS,\"owner\":\"$MAIN\",\"hive_token\":$TOKEN_ARG}" \
     prepaid-gas '100 Tgas' attached-deposit '0 NEAR' $NET sign-with-legacy-keychain send
 else
   echo "==> $CONTRACT exists: redeploying code only (state kept)"

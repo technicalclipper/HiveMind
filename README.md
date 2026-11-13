@@ -160,7 +160,7 @@ HiveMind/
 |---|---|---|
 | 0 | Setup: toolchains, testnet accounts, repo | ✅ Done |
 | 1 | Smart contract + tests + testnet deploy | ✅ Done |
-| 2 | `$HIVE` NEP-141 token | ⏳ Planned |
+| 2 | `$HIVE` NEP-141 token | ✅ Done |
 | 3 | Dataset, LoRA training, eval, merge scripts | ⏳ Planned |
 | 4 | The Arena evaluator service (+ TEE) | ⏳ Planned |
 | 5 | Inference server with paid queries | ⏳ Planned |
@@ -178,7 +178,8 @@ Kept honest and up to date as the build progresses.
 
 | Component | Status |
 |---|---|
-| Smart contract on NEAR testnet | ✅ Real: deployed at `core.hivemind-ai.testnet`, 23 unit tests, full round verified on testnet with `scripts/smoke-test.sh` (smoke-test scores are hand-picked until The Arena evaluator lands) |
+| Smart contract on NEAR testnet | ✅ Real: deployed at `core.hivemind-ai.testnet`, 25 unit tests, full round verified on testnet with `scripts/smoke-test.sh` (smoke-test scores are hand-picked until The Arena evaluator lands) |
+| `$HIVE` token | ✅ Real: NEP-141 at `hive.hivemind-ai.testnet`, minted by the core contract on acceptance (1 HIVE per 0.001 loss improvement), 6 unit tests, verified on testnet |
 | LoRA training and evaluation on a real model | ⏳ Not yet built |
 | Evaluator running inside a TEE | ⏳ Not yet built (will be labelled "simulated" if not completed) |
 | Paid inference | ⏳ Not yet built |
@@ -190,13 +191,15 @@ Kept honest and up to date as the build progresses.
 
 Development setup (toolchains, Python environment, testnet accounts): **[docs/SETUP.md](docs/SETUP.md)**.
 
-Testnet accounts used by this project live under `hivemind-ai.testnet` (owner), with the contract at `core.hivemind-ai.testnet` and `evaluator.`, `operator.`, `user1.`, `alice.`, `bob.`, `carol.` and `mallory.` sub-accounts for the demo.
+Testnet accounts used by this project live under `hivemind-ai.testnet` (owner), with the contract at `core.hivemind-ai.testnet`, the `$HIVE` token at `hive.hivemind-ai.testnet`, and `evaluator.`, `operator.`, `user1.`, `alice.`, `bob.`, `carol.` and `mallory.` sub-accounts for the demo.
 
-### Contract
+### Contracts
 
 ```bash
-cd contract && cargo test                  # unit tests
-scripts/deploy.sh                          # build + deploy to testnet (FRESH=1 wipes state)
+cd contract && cargo test                  # core unit tests
+cd token && cargo test                     # $HIVE unit tests
+scripts/deploy-token.sh                    # deploy $HIVE (minter: core contract)
+scripts/deploy.sh                          # build + deploy core to testnet (FRESH=1 wipes state)
 scripts/smoke-test.sh                      # run a full round on testnet with the demo accounts
 ```
 

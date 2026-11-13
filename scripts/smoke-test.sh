@@ -8,6 +8,7 @@ set -euo pipefail
 
 MAIN="${MAIN:-hivemind-ai.testnet}"
 C="${CONTRACT:-core.$MAIN}"
+TOKEN="${HIVE_TOKEN:-hive.$MAIN}"
 NET="network-config testnet"
 
 call() { # call <signer> <method> <json-args> <deposit>
@@ -22,6 +23,11 @@ call() { # call <signer> <method> <json-args> <deposit>
   return 0
 }
 view() { near contract call-function as-read-only "$C" "$1" json-args "$2" $NET now 2>/dev/null; }
+hive_of() { # human-readable $HIVE balance
+  local raw
+  raw=$(near contract call-function as-read-only "$TOKEN" ft_balance_of json-args "{\"account_id\":\"$1\"}" $NET now 2>/dev/null | tr -d '" \n')
+  python -c "print(f'{int(\"${raw:-0}\")/1e18:g}')"
+}
 step() { echo; echo "==> $*"; }
 rand_hash() { echo "$1-$(date +%s%N)-$RANDOM" | sha256sum | cut -d' ' -f1; }
 
@@ -44,6 +50,10 @@ step "Evaluator scores: alice +0.030, bob +0.010, mallory fails safety"
 call "evaluator.$MAIN" record_score "{\"contribution_id\":${IDS[0]},\"score_micros\":30000,\"safety_passed\":true}" '0 NEAR'
 call "evaluator.$MAIN" record_score "{\"contribution_id\":${IDS[1]},\"score_micros\":10000,\"safety_passed\":true}" '0 NEAR'
 call "evaluator.$MAIN" record_score "{\"contribution_id\":${IDS[2]},\"score_micros\":5000,\"safety_passed\":false}" '0 NEAR'
+
+step "\$HIVE minted on acceptance (1 HIVE per 0.001 loss improvement)"
+sleep 2
+for who in alice bob mallory; do echo "   $who: $(hive_of "$who.$MAIN") HIVE"; done
 
 step "Evaluator finalizes round -> new model version"
 LOSS=$(view get_stats '{}' | grep latest_eval_loss_micros | grep -o '[0-9]*')

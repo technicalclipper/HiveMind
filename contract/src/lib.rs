@@ -15,7 +15,8 @@ use near_sdk::json_types::{U64, U128};
 use near_sdk::serde_json::{Value, json};
 use near_sdk::store::{IterableMap, LookupMap, LookupSet, Vector};
 use near_sdk::{
-    AccountId, BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise, env, near, require,
+    AccountId, BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise, env, ext_contract, near,
+    require,
 };
 
 mod views;
@@ -34,6 +35,15 @@ pub const OPERATOR_BPS: u128 = 2_000;
 // The remaining 10% goes to the treasury.
 
 const GAS_FOR_CLAIM_CALLBACK: Gas = Gas::from_tgas(10);
+const GAS_FOR_MINT: Gas = Gas::from_tgas(15);
+/// $HIVE (18 decimals) minted per score micro: 1 HIVE per 0.001 of eval-loss improvement.
+pub const HIVE_PER_SCORE_MICRO: u128 = 1_000_000_000_000_000;
+
+/// The $HIVE token contract's mint method.
+#[ext_contract(ext_hive_token)]
+pub trait HiveTokenMinter {
+    fn ft_mint(&mut self, account_id: AccountId, amount: U128, memo: Option<String>);
+}
 const MAX_URI_LEN: usize = 512;
 const MAX_ATTESTATION_LEN: usize = 1024;
 const NS_PER_MINUTE: u64 = 60_000_000_000;
@@ -81,6 +91,8 @@ pub struct Contribution {
     pub score_micros: u64,
     pub safety_passed: bool,
     pub shares_minted: U128,
+    /// $HIVE minted for this contribution (18 decimals).
+    pub hive_minted: U128,
     /// Round reward paid when merged.
     pub reward: NearToken,
     /// Optional TEE attestation (or report hash) from the evaluator.
@@ -156,6 +168,9 @@ pub struct Hivemind {
     next_round_pool: u128,
     total_queries: u64,
     total_fees: u128,
+
+    /// $HIVE token contract. When set, accepted contributions mint $HIVE.
+    hive_token: Option<AccountId>,
 }
 
 pub(crate) fn emit(event: &str, data: Value) {
@@ -181,6 +196,7 @@ impl Hivemind {
         base_model_uri: String,
         base_eval_loss_micros: u64,
         owner: Option<AccountId>,
+        hive_token: Option<AccountId>,
     ) -> Self {
         require!(
             !base_model_uri.is_empty() && base_model_uri.len() <= MAX_URI_LEN,
@@ -212,6 +228,7 @@ impl Hivemind {
             next_round_pool: 0,
             total_queries: 0,
             total_fees: 0,
+            hive_token,
         };
         this.model_versions.push(ModelVersion {
             version: 1,
@@ -349,6 +366,7 @@ impl Hivemind {
             score_micros: 0,
             safety_passed: false,
             shares_minted: U128(0),
+            hive_minted: U128(0),
             reward: NearToken::from_yoctonear(0),
             attestation: None,
             submitted_at: U64(now),
@@ -399,6 +417,10 @@ impl Hivemind {
 
         let accepted = safety_passed && score_micros > 0;
         let shares = if accepted { score_micros as u128 } else { 0 };
+        let hive = match &self.hive_token {
+            Some(_) if accepted => shares * HIVE_PER_SCORE_MICRO,
+            _ => 0,
+        };
         let now = env::block_timestamp();
         {
             let c = self.contributions.get_mut(cidx).unwrap();
@@ -410,6 +432,7 @@ impl Hivemind {
             c.score_micros = score_micros;
             c.safety_passed = safety_passed;
             c.shares_minted = U128(shares);
+            c.hive_minted = U128(hive);
             c.attestation = attestation;
             c.scored_at = Some(U64(now));
         }
@@ -422,6 +445,15 @@ impl Hivemind {
                 .total_accepted_score += score_micros;
             // Return the stake.
             let _ = Promise::new(contributor.clone()).transfer(stake);
+            if let Some(token) = self.hive_token.clone() {
+                let _ = ext_hive_token::ext(token)
+                    .with_static_gas(GAS_FOR_MINT)
+                    .ft_mint(
+                        contributor.clone(),
+                        U128(hive),
+                        Some(format!("Hivemind contribution {contribution_id}")),
+                    );
+            }
         } else {
             self.treasury += stake.as_yoctonear();
         }
@@ -436,6 +468,7 @@ impl Hivemind {
                 "score_micros": score_micros,
                 "safety_passed": safety_passed,
                 "shares_minted": U128(shares),
+                "hive_minted": U128(hive),
                 "stake": stake,
                 "stake_outcome": if accepted { "returned" } else { "slashed" },
             }),
@@ -743,6 +776,12 @@ impl Hivemind {
             "base_eval_updated",
             json!({ "eval_loss_micros": eval_loss_micros, "uri": v.uri }),
         );
+    }
+
+    /// Set or clear the $HIVE token contract (this contract must be its minter).
+    pub fn set_hive_token(&mut self, hive_token: Option<AccountId>) {
+        self.assert_owner();
+        self.hive_token = hive_token;
     }
 
     pub fn set_evaluator(&mut self, evaluator: AccountId) {

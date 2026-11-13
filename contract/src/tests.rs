@@ -36,6 +36,7 @@ fn setup() -> Hivemind {
         "hf://Qwen/Qwen2.5-0.5B-Instruct".into(),
         2_000_000,
         None,
+        None,
     )
 }
 
@@ -367,4 +368,35 @@ fn base_eval_locked_after_round_starts() {
     let mut c = setup_with_round();
     ctx("evaluator.testnet", 0);
     c.set_base_eval(1, None);
+}
+
+#[test]
+fn hive_minted_only_when_token_set_and_accepted() {
+    // Without a token: nothing minted.
+    let mut c = setup_with_round();
+    let a = submit(&mut c, "alice.testnet", 1);
+    score(&mut c, a, 30_000, true);
+    assert_eq!(c.get_contribution(a).unwrap().hive_minted.0, 0);
+
+    // With a token: 30_000 micros -> 30 HIVE; slashed -> 0.
+    ctx("owner.testnet", 0);
+    c.set_hive_token(Some(acc("hive.testnet")));
+    assert_eq!(c.get_config().hive_token, Some(acc("hive.testnet")));
+    let b = submit(&mut c, "bob.testnet", 2);
+    score(&mut c, b, 30_000, true);
+    assert_eq!(
+        c.get_contribution(b).unwrap().hive_minted.0,
+        30 * 1_000_000_000_000_000_000
+    );
+    let m = submit(&mut c, "mallory.testnet", 3);
+    score(&mut c, m, 30_000, false);
+    assert_eq!(c.get_contribution(m).unwrap().hive_minted.0, 0);
+}
+
+#[test]
+#[should_panic(expected = "Only owner")]
+fn only_owner_sets_hive_token() {
+    let mut c = setup();
+    ctx("alice.testnet", 0);
+    c.set_hive_token(Some(acc("hive.testnet")));
 }

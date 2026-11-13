@@ -18,6 +18,8 @@ pub struct Config {
     pub contributor_bps: u32,
     pub operator_bps: u32,
     pub treasury_bps: u32,
+    pub hive_token: Option<AccountId>,
+    pub hive_per_score_micro: U128,
 }
 
 #[near(serializers = [json])]
@@ -82,6 +84,8 @@ impl Hivemind {
             contributor_bps: CONTRIBUTOR_BPS as u32,
             operator_bps: OPERATOR_BPS as u32,
             treasury_bps: (BPS_DENOM - CONTRIBUTOR_BPS - OPERATOR_BPS) as u32,
+            hive_token: self.hive_token.clone(),
+            hive_per_score_micro: U128(HIVE_PER_SCORE_MICRO),
         }
     }
 
