@@ -195,6 +195,7 @@ class VerifyBody(BaseModel):
     public_key: str
     signature: str
     nonce: str
+    callback_url: str | None = None
 
 
 class AskBody(BaseModel):
@@ -228,7 +229,7 @@ def auth_challenge() -> dict:
 @app.post("/auth/verify")
 def auth_verify(body: VerifyBody) -> dict:
     try:
-        token = auth.verify(body.account_id, body.public_key, body.signature, body.nonce)
+        token = auth.verify(body.account_id, body.public_key, body.signature, body.nonce, body.callback_url)
     except ValueError as e:
         raise HTTPException(401, str(e)) from e
     return {"token": token, "account_id": body.account_id}

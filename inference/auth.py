@@ -69,10 +69,12 @@ def _decode_signature(signature: str) -> bytes:
     return base58.b58decode(signature)
 
 
-def verify_signature(public_key: str, signature: str, message: str, nonce: bytes, recipient: str) -> bool:
+def verify_signature(
+    public_key: str, signature: str, message: str, nonce: bytes, recipient: str, callback_url: str | None = None
+) -> bool:
     try:
         VerifyKey(_decode_public_key(public_key)).verify(
-            nep413_hash(message, nonce, recipient), _decode_signature(signature)
+            nep413_hash(message, nonce, recipient, callback_url), _decode_signature(signature)
         )
         return True
     except (BadSignatureError, ValueError):
@@ -109,11 +111,20 @@ class Auth:
         self.challenges[nonce] = now + CHALLENGE_TTL
         return {"message": SIGN_IN_MESSAGE, "nonce": nonce, "recipient": self.recipient}
 
-    def verify(self, account_id: str, public_key: str, signature: str, nonce: str) -> str:
-        """Returns a session token, or raises ValueError."""
+    def verify(
+        self, account_id: str, public_key: str, signature: str, nonce: str, callback_url: str | None = None
+    ) -> str:
+        """Returns a session token, or raises ValueError.
+
+        Redirect wallets (e.g. MyNearWallet) include the callbackUrl in the signed NEP-413 payload,
+        so it must be passed back here exactly as it was given to signMessage."""
         if self.challenges.pop(nonce, 0) < time.time():
             raise ValueError("Unknown or expired challenge")
-        if not verify_signature(public_key, signature, SIGN_IN_MESSAGE, base64.b64decode(nonce), self.recipient):
+        nonce_bytes = base64.b64decode(nonce)
+        if not (
+            verify_signature(public_key, signature, SIGN_IN_MESSAGE, nonce_bytes, self.recipient, callback_url)
+            or (callback_url and verify_signature(public_key, signature, SIGN_IN_MESSAGE, nonce_bytes, self.recipient))
+        ):
             raise ValueError("Invalid signature")
         if not is_full_access_key(self.rpc_url, account_id, public_key):
             raise ValueError("Key is not a full-access key of this account")

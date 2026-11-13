@@ -164,7 +164,7 @@ HiveMind/
 | 3 | Dataset, LoRA training, eval, merge scripts | ✅ Done |
 | 4 | The Arena evaluator service (+ TEE) | ✅ Done (TEE simulated) |
 | 5 | Inference server with paid queries | ✅ Done |
-| 6 | Frontend: Home, Arena, Contribute, Merge, Ask, Leaderboard, Earnings | ⏳ Planned |
+| 6 | Frontend: Home, Arena, Contribute, Merge, Ask, Leaderboard, Earnings | ✅ Done |
 | 7 | NEAR Intents payments | ⏳ Planned |
 | 8 | End-to-end integration and testing | ⏳ Planned |
 | 9 | Docs | ⏳ Planned |
@@ -184,7 +184,7 @@ Kept honest and up to date as the build progresses.
 | The Arena evaluator service | ✅ Real: polls the contract, verifies adapter hashes, scores on GPU, streams every step over WebSocket and posts `record_score` / `finalize_round` on testnet. Round 1 on `core.hivemind-ai.testnet` was run entirely by it: alice, bob, carol accepted, mallory slashed, v2 published at loss 2.073 (v1 4.042) |
 | Evaluator running inside a TEE | ⚠️ Simulated: each verdict's report hash is posted on chain as `sim-tee:<sha256>` (reports served at `/reports/<sha256>`), but the service is not running in an enclave and there is no hardware attestation |
 | Paid inference | ✅ Real: NEP-413 wallet sign-in, on-chain credit checks, streaming answers from the latest version (v2) with v1 comparison, batched `charge` settlement on testnet with the 70/20/10 split |
-| Frontend | ⏳ Not yet built |
+| Frontend | ✅ Real: Next.js app reading live testnet state; The Arena runs live from the evaluator's WebSocket or replays real round 1 evaluations; wallet transactions via Wallet Selector. Not yet deployed to a public URL |
 
 ---
 
@@ -230,7 +230,13 @@ ml/.venv/Scripts/python scripts/ask.py --buy 0.1 --compare "How much does storag
 
 See [inference/README.md](inference/README.md).
 
-Run instructions for the other components will be added here as they land.
+### Frontend
+
+```bash
+cd frontend && npm install && npm run dev   # http://localhost:3000
+```
+
+See [frontend/README.md](frontend/README.md).
 
 ---
 
