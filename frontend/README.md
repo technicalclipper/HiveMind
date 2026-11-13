@@ -24,7 +24,7 @@ npm run build      # production build
 - **Transactions** (submit, buy credits, claim) are signed in the user's wallet via Wallet Selector (MyNearWallet, Meteor, HERE).
 - **The Arena** connects to the evaluator's WebSocket (`NEXT_PUBLIC_ARENA_URL`, default `http://localhost:8765`) for live evaluations. When it is offline, every past evaluation can still be replayed from the event logs, served by the evaluator or bundled in `public/replays/` (round 1 on `core.hivemind-ai.testnet`).
 - **Ask** talks to the inference server (`NEXT_PUBLIC_INFERENCE_URL`, default `http://localhost:8000`).
-- **Any-token top-ups** use `app/api/intents/quote`, which asks the NEAR Intents 1Click API for a live `dry` quote into wNEAR (set `ONECLICK_API_KEY` to avoid the keyless fee tier). NEAR Intents is mainnet-only, so on testnet the page shows the quote but does not execute the swap. The **wNEAR** tab is the real testnet path: one transaction on `wrap.testnet` registers, wraps and calls `ft_transfer_call` into the Hivemind contract.
+- **Any-token top-ups** use `app/api/intents/quote`, which asks the NEAR Intents 1Click API for a live `dry` quote into wNEAR (optional `ONECLICK_API_KEY` is sent as a bearer token if set; quotes also work without one). NEAR Intents is mainnet-only, so on testnet the page shows the quote but does not execute the swap. The **wNEAR** tab is the real testnet path: one transaction on `wrap.testnet` registers, wraps and calls `ft_transfer_call` into the Hivemind contract.
 
 ## Configuration
 
