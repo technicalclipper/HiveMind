@@ -15,8 +15,8 @@ use near_sdk::json_types::{U64, U128};
 use near_sdk::serde_json::{Value, json};
 use near_sdk::store::{IterableMap, LookupMap, LookupSet, Vector};
 use near_sdk::{
-    AccountId, BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise, env, ext_contract, near,
-    require,
+    AccountId, BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise, PromiseOrValue, env,
+    ext_contract, near, require,
 };
 
 mod views;
@@ -43,6 +43,24 @@ pub const HIVE_PER_SCORE_MICRO: u128 = 1_000_000_000_000_000;
 #[ext_contract(ext_hive_token)]
 pub trait HiveTokenMinter {
     fn ft_mint(&mut self, account_id: AccountId, amount: U128, memo: Option<String>);
+}
+
+const GAS_FOR_UNWRAP: Gas = Gas::from_tgas(10);
+
+/// The wNEAR contract's unwrap method.
+#[ext_contract(ext_wrap)]
+pub trait WrappedNear {
+    fn near_withdraw(&mut self, amount: U128);
+}
+
+/// wNEAR contract for the network this contract runs on. Derived from the account suffix so no
+/// state field is needed (adding one would change the stored layout).
+pub fn wrap_account() -> AccountId {
+    if env::current_account_id().as_str().ends_with(".testnet") {
+        "wrap.testnet".parse().unwrap()
+    } else {
+        "wrap.near".parse().unwrap()
+    }
 }
 const MAX_URI_LEN: usize = 512;
 const MAX_ATTESTATION_LEN: usize = 1024;
@@ -655,6 +673,55 @@ impl Hivemind {
     }
 
     /// Withdraw unused prepaid balance (all of it if `amount` is omitted).
+    /// NEP-141 receiver: buy query credits with wNEAR, e.g. the output of a NEAR Intents swap from
+    /// any token on any chain. `msg` may be empty (credit the sender) or `{"beneficiary": "<account>"}`.
+    /// The wNEAR is unwrapped to native NEAR so all fee accounting stays in NEAR.
+    pub fn ft_on_transfer(
+        &mut self,
+        sender_id: AccountId,
+        amount: U128,
+        msg: String,
+    ) -> PromiseOrValue<U128> {
+        let token = env::predecessor_account_id();
+        require!(
+            token == wrap_account(),
+            "Only wNEAR is accepted for credits"
+        );
+        self.assert_not_paused();
+        require!(
+            amount.0 >= self.price_per_query.as_yoctonear(),
+            "Deposit at least the price of one query"
+        );
+        let beneficiary: AccountId = if msg.trim().is_empty() {
+            sender_id.clone()
+        } else {
+            near_sdk::serde_json::from_str::<near_sdk::serde_json::Value>(&msg)
+                .ok()
+                .and_then(|v| v.get("beneficiary")?.as_str()?.parse().ok())
+                .unwrap_or_else(|| {
+                    env::panic_str("msg must be empty or {\"beneficiary\": \"<account>\"}")
+                })
+        };
+        let balance = self.prepaid.get(&beneficiary).copied().unwrap_or(0) + amount.0;
+        self.prepaid.insert(beneficiary.clone(), balance);
+        emit(
+            "credits_purchased",
+            json!({
+                "user": beneficiary,
+                "payer": sender_id,
+                "amount": amount,
+                "balance": U128(balance),
+                "queries_available": (balance / self.price_per_query.as_yoctonear()) as u64,
+                "paid_with": token,
+            }),
+        );
+        let _ = ext_wrap::ext(token)
+            .with_attached_deposit(NearToken::from_yoctonear(1))
+            .with_static_gas(GAS_FOR_UNWRAP)
+            .near_withdraw(amount);
+        PromiseOrValue::Value(U128(0))
+    }
+
     pub fn withdraw_credits(&mut self, amount: Option<U128>) -> Promise {
         let user = env::predecessor_account_id();
         let balance = self.prepaid.get(&user).copied().unwrap_or(0);

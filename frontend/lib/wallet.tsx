@@ -28,6 +28,8 @@ interface WalletState {
   /** Call a method on the Hivemind contract. `depositNear` is a decimal string, e.g. "0.1". */
   call: (method: string, args?: object, depositNear?: string, gasTgas?: number) => Promise<unknown>;
   signMessage: (p: { message: string; recipient: string; nonce: string; callbackUrl?: string }) => Promise<SignedMessage | void>;
+  /** One transaction with several function calls on any contract. Deposits are yoctoNEAR. */
+  callActions: (receiverId: string, calls: { method: string; args: object; depositYocto: bigint; gasTgas: number }[]) => Promise<unknown>;
 }
 
 const Ctx = createContext<WalletState | null>(null);
@@ -90,9 +92,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     [selector],
   );
 
+  const callActions = useCallback(
+    async (receiverId: string, calls: { method: string; args: object; depositYocto: bigint; gasTgas: number }[]) => {
+      if (!selector) throw new Error("Wallet not ready");
+      const wallet = await selector.wallet();
+      return wallet.signAndSendTransaction({
+        receiverId,
+        actions: calls.map((c) => actionCreators.functionCall(c.method, c.args, BigInt(c.gasTgas) * 10n ** 12n, c.depositYocto)),
+      });
+    },
+    [selector],
+  );
+
   const value = useMemo(
-    () => ({ ready: !!selector, accountId, signIn, signOut, call, signMessage }),
-    [selector, accountId, signIn, signOut, call, signMessage],
+    () => ({ ready: !!selector, accountId, signIn, signOut, call, signMessage, callActions }),
+    [selector, accountId, signIn, signOut, call, signMessage, callActions],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

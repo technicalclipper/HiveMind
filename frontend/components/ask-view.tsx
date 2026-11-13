@@ -8,6 +8,7 @@ import { usePoll } from "@/lib/hooks";
 import { type AccountView, type Config, formatNear, shortAccount, view } from "@/lib/near";
 import { useWallet } from "@/lib/wallet";
 
+import { TopUp } from "./top-up";
 import { Card, ExternalLink, PageHeader } from "./ui";
 
 const TOKEN_KEY = "hivemind-model-session";
@@ -33,13 +34,12 @@ const SUGGESTIONS = [
 ];
 
 export function AskView() {
-  const { accountId, signIn, call, signMessage } = useWallet();
+  const { accountId, signIn, signMessage } = useWallet();
   const [server, setServer] = useState<"checking" | "up" | "down">("checking");
   const [session, setSession] = useState<{ token: string; account: string } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [compare, setCompare] = useState(true);
-  const [buyAmount, setBuyAmount] = useState("0.1");
   const [status, setStatus] = useState<string | null>(null);
   const [split, setSplit] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -104,17 +104,6 @@ export function AskView() {
         sessionStorage.removeItem(PENDING_KEY);
         await verify({ account_id: signed.accountId, public_key: signed.publicKey, signature: signed.signature, nonce: c.nonce, callback_url: callbackUrl });
       }
-    } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
-    }
-  }
-
-  async function buy() {
-    setStatus(null);
-    try {
-      await call("buy_credits", {}, buyAmount, 30);
-      setStatus(`Bought ${buyAmount} Ⓝ of credits.`);
-      reload();
     } catch (e) {
       setStatus(e instanceof Error ? e.message : String(e));
     }
@@ -210,11 +199,8 @@ export function AskView() {
               Balance: <span className="font-mono text-text">{data?.me ? formatNear(data.me.prepaid, 4) : "0"} Ⓝ</span> ·{" "}
               <span className="font-mono text-mint">{queriesLeft}</span> questions
             </div>
-            <div className="mt-3 flex gap-2">
-              <input className="input font-mono" value={buyAmount} onChange={(e) => setBuyAmount(e.target.value)} inputMode="decimal" />
-              <button className="btn btn-ghost" disabled={!accountId} onClick={buy}>
-                Buy
-              </button>
+            <div className="mt-3">
+              <TopUp price={price} onDone={reload} onStatus={setStatus} />
             </div>
           </SetupStep>
           <SetupStep n={3} done={signedInToModel} title="Sign in to the model">

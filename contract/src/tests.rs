@@ -400,3 +400,53 @@ fn only_owner_sets_hive_token() {
     ctx("alice.testnet", 0);
     c.set_hive_token(Some(acc("hive.testnet")));
 }
+
+// ---- wNEAR credits (landing point for NEAR Intents swaps) ----
+
+fn ctx_wrap(sender_contract: &str) {
+    let mut b = VMContextBuilder::new();
+    b.current_account_id(acc("core.hivemind-ai.testnet"))
+        .predecessor_account_id(acc(sender_contract))
+        .signer_account_id(acc("user.testnet"))
+        .account_balance(NearToken::from_near(1000))
+        .block_timestamp(T0);
+    testing_env!(b.build());
+}
+
+#[test]
+fn wnear_buys_credits_for_sender_or_beneficiary() {
+    let mut c = setup();
+    ctx_wrap("wrap.testnet");
+    let used = c.ft_on_transfer(acc("user.testnet"), U128(50 * MILLI), String::new());
+    assert!(matches!(used, PromiseOrValue::Value(U128(0))));
+    assert_eq!(c.get_credits(acc("user.testnet")).0, 50 * MILLI);
+
+    ctx_wrap("wrap.testnet");
+    let _ = c.ft_on_transfer(
+        acc("user.testnet"),
+        U128(20 * MILLI),
+        r#"{"beneficiary":"friend.testnet"}"#.into(),
+    );
+    assert_eq!(c.get_credits(acc("friend.testnet")).0, 20 * MILLI);
+    assert!(
+        get_logs()
+            .iter()
+            .any(|l| l.contains("\"paid_with\":\"wrap.testnet\""))
+    );
+}
+
+#[test]
+#[should_panic(expected = "Only wNEAR is accepted for credits")]
+fn other_tokens_rejected() {
+    let mut c = setup();
+    ctx_wrap("usdc.testnet");
+    let _ = c.ft_on_transfer(acc("user.testnet"), U128(50 * MILLI), String::new());
+}
+
+#[test]
+#[should_panic(expected = "Deposit at least the price of one query")]
+fn wnear_below_price_rejected() {
+    let mut c = setup();
+    ctx_wrap("wrap.testnet");
+    let _ = c.ft_on_transfer(acc("user.testnet"), U128(MILLI), String::new());
+}

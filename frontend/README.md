@@ -7,7 +7,7 @@ The Hivemind web app: Next.js 16, Tailwind CSS 4, Framer Motion and NEAR Wallet 
 | `/` | Hero with the live model orb, on-chain stats, eval loss by version, the attack The Arena caught |
 | `/arena` | **The Arena**: submission queue, evaluation chamber (pipeline, 96-tile hidden-eval grid, live loss chart, safety shields, terminal), ACCEPTED / SLASHED verdicts, and the round merge orb with merge-strength trials |
 | `/contribute` | Train → publish → submit steps, current round, submit form (wallet, with stake), your contributions |
-| `/ask` | Buy credits, sign in to the model (NEP-413), streaming chat with a v1 comparison, animated 70/20/10 fee split, settlement tx links |
+| `/ask` | Top up credits with NEAR, wNEAR or any token via NEAR Intents (live quotes), sign in to the model (NEP-413), streaming chat with a v1 comparison, animated 70/20/10 fee split, settlement tx links |
 | `/leaderboard` | Royalty shares, $HIVE balances, earnings, and claiming |
 
 ## Run
@@ -24,6 +24,7 @@ npm run build      # production build
 - **Transactions** (submit, buy credits, claim) are signed in the user's wallet via Wallet Selector (MyNearWallet, Meteor, HERE).
 - **The Arena** connects to the evaluator's WebSocket (`NEXT_PUBLIC_ARENA_URL`, default `http://localhost:8765`) for live evaluations. When it is offline, every past evaluation can still be replayed from the event logs, served by the evaluator or bundled in `public/replays/` (round 1 on `core.hivemind-ai.testnet`).
 - **Ask** talks to the inference server (`NEXT_PUBLIC_INFERENCE_URL`, default `http://localhost:8000`).
+- **Any-token top-ups** use `app/api/intents/quote`, which asks the NEAR Intents 1Click API for a live `dry` quote into wNEAR (set `ONECLICK_API_KEY` to avoid the keyless fee tier). NEAR Intents is mainnet-only, so on testnet the page shows the quote but does not execute the swap. The **wNEAR** tab is the real testnet path: one transaction on `wrap.testnet` registers, wraps and calls `ft_transfer_call` into the Hivemind contract.
 
 ## Configuration
 

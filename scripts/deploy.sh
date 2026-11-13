@@ -48,6 +48,8 @@ if ! account_exists "$CONTRACT"; then
   near contract deploy "$CONTRACT" use-file "$WASM" with-init-call new \
     json-args "{\"evaluator\":\"$EVALUATOR\",\"base_model_uri\":\"$BASE_MODEL_URI\",\"base_eval_loss_micros\":$BASE_LOSS_MICROS,\"owner\":\"$MAIN\",\"hive_token\":$TOKEN_ARG}" \
     prepaid-gas '100 Tgas' attached-deposit '0 NEAR' $NET sign-with-legacy-keychain send
+  echo "==> Registering $CONTRACT on wrap.testnet (so it can receive wNEAR for credits)"
+  near contract call-function as-transaction wrap.testnet storage_deposit     json-args "{\"account_id\":\"$CONTRACT\",\"registration_only\":true}"     prepaid-gas '30 Tgas' attached-deposit '0.00125 NEAR' sign-as "$MAIN" $NET sign-with-legacy-keychain send
 else
   echo "==> $CONTRACT exists: redeploying code only (state kept)"
   near contract deploy "$CONTRACT" use-file "$WASM" without-init-call $NET sign-with-legacy-keychain send

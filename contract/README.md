@@ -28,6 +28,7 @@ buy_credits ──► charge (operator) ──► 70% contributors (by shares) �
 | `finalize_round(new_model_uri?, new_eval_loss_micros?, attestation?)` | evaluator | — | Requires every contribution scored. With accepted contributions, publishes a new model version and pays the reward pool pro rata to score; without, the pool rolls over |
 | `register_operator()` / `unregister_operator()` | anyone | ≥ `operator_stake` (0.1 NEAR) | Join or leave as an inference operator |
 | `buy_credits()` / `withdraw_credits(amount?)` | user | ≥ 1 query | Prepay for queries / withdraw unused balance |
+| `ft_on_transfer(sender_id, amount, msg)` | wNEAR contract | — | Buy credits with wNEAR via `ft_transfer_call` (the landing point for NEAR Intents swaps from any token). `msg` is empty or `{"beneficiary": "<account>"}`. Only `wrap.testnet` / `wrap.near` is accepted; the wNEAR is unwrapped to NEAR |
 | `charge(user, queries)` | operator | — | Deducts `price_per_query × queries` (0.01 NEAR each) and splits the fee 70/20/10 |
 | `claim()` | anyone | — | Withdraws royalties, round rewards and operator fees. Restored automatically if the transfer fails |
 | `set_base_eval(eval_loss_micros, uri?)` | evaluator / owner | — | Records the measured baseline of version 1; locked once round 1 starts |
@@ -56,7 +57,7 @@ Every state change logs a [NEP-297](https://nomicon.io/Standards/EventsFormat) e
 ## Build, test, deploy
 
 ```bash
-cargo test                                         # 25 unit tests
+cargo test                                         # 28 unit tests
 cargo near build non-reproducible-wasm --no-abi    # → target/near/hivemind.wasm
 ../scripts/deploy.sh                               # create + deploy + init on testnet
 FRESH=1 ../scripts/deploy.sh                       # wipe state and redeploy

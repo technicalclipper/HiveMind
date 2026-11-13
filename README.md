@@ -165,7 +165,7 @@ HiveMind/
 | 4 | The Arena evaluator service (+ TEE) | ✅ Done (TEE simulated) |
 | 5 | Inference server with paid queries | ✅ Done |
 | 6 | Frontend: Home, Arena, Contribute, Merge, Ask, Leaderboard, Earnings | ✅ Done |
-| 7 | NEAR Intents payments | ⏳ Planned |
+| 7 | NEAR Intents payments | ✅ Done (live mainnet quotes; wNEAR settlement on testnet) |
 | 8 | End-to-end integration and testing | ⏳ Planned |
 | 9 | Docs | ⏳ Planned |
 | 10 | Demo video and submission | ⏳ Planned |
@@ -178,12 +178,13 @@ Kept honest and up to date as the build progresses.
 
 | Component | Status |
 |---|---|
-| Smart contract on NEAR testnet | ✅ Real: deployed at `core.hivemind-ai.testnet`, 25 unit tests, full round verified on testnet with `scripts/smoke-test.sh` (smoke-test scores are hand-picked until The Arena evaluator lands) |
+| Smart contract on NEAR testnet | ✅ Real: deployed at `core.hivemind-ai.testnet`, 28 unit tests, full round verified on testnet with `scripts/smoke-test.sh` (smoke-test scores are hand-picked until The Arena evaluator lands) |
 | `$HIVE` token | ✅ Real: NEP-141 at `hive.hivemind-ai.testnet`, minted by the core contract on acceptance (1 HIVE per 0.001 loss improvement), 6 unit tests, verified on testnet |
 | LoRA training and evaluation on a real model | ✅ Real: 4 LoRA adapters trained on an RTX 3060; hidden-eval loss 4.04 (base) → 2.07 (merged v2); the poisoned adapter is caught on 10/10 safety probes. Results and caveats: [ml/README.md](ml/README.md) |
 | The Arena evaluator service | ✅ Real: polls the contract, verifies adapter hashes, scores on GPU, streams every step over WebSocket and posts `record_score` / `finalize_round` on testnet. Round 1 on `core.hivemind-ai.testnet` was run entirely by it: alice, bob, carol accepted, mallory slashed, v2 published at loss 2.073 (v1 4.042) |
 | Evaluator running inside a TEE | ⚠️ Simulated: each verdict's report hash is posted on chain as `sim-tee:<sha256>` (reports served at `/reports/<sha256>`), but the service is not running in an enclave and there is no hardware attestation |
 | Paid inference | ✅ Real: NEP-413 wallet sign-in, on-chain credit checks, streaming answers from the latest version (v2) with v1 comparison, batched `charge` settlement on testnet with the 70/20/10 split |
+| NEAR Intents payments | ✅ Real on testnet: the contract accepts wNEAR through `ft_transfer_call` (`ft_on_transfer`), credits the payer and unwraps to NEAR; tested with `user1`. ⚠️ Quote-only: the Ask page shows **live mainnet** 1Click quotes for paying with USDC, USDT, ETH, BTC, SOL or ZEC from 9 chains, but NEAR Intents has no testnet, so the swap itself is not executed in this demo |
 | Frontend | ✅ Real: Next.js app reading live testnet state; The Arena runs live from the evaluator's WebSocket or replays real round 1 evaluations; wallet transactions via Wallet Selector. Not yet deployed to a public URL |
 
 ---
