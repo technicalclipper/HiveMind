@@ -41,7 +41,8 @@ Fill in the account IDs after creating the testnet accounts below.
 
 | Account | Role |
 |---|---|
-| `<main>.testnet` | Owner; the Hivemind contract is deployed here |
+| `<main>.testnet` | Owner |
+| `core.<main>.testnet` | Hivemind core contract (created by `scripts/deploy.sh`) |
 | `evaluator.<main>.testnet` | The Arena evaluator service |
 | `operator.<main>.testnet` | Inference operator |
 | `alice.<main>.testnet`, `bob.<main>.testnet`, `carol.<main>.testnet` | Honest demo contributors |

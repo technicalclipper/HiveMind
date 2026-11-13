@@ -99,7 +99,9 @@ The evaluation sandbox, and the centrepiece of the UI. Every submission runs thr
 
 ---
 
-## Smart contract API (planned)
+## Smart contract API
+
+**Live on NEAR testnet:** [`core.hivemind-ai.testnet`](https://testnet.nearblocks.io/address/core.hivemind-ai.testnet). Full reference, events and design notes: [contract/README.md](contract/README.md).
 
 | Method | Caller | Purpose |
 |---|---|---|
@@ -157,7 +159,7 @@ HiveMind/
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Setup: toolchains, testnet accounts, repo | ✅ Done |
-| 1 | Smart contract + tests + testnet deploy | ⏳ Planned |
+| 1 | Smart contract + tests + testnet deploy | ✅ Done |
 | 2 | `$HIVE` NEP-141 token | ⏳ Planned |
 | 3 | Dataset, LoRA training, eval, merge scripts | ⏳ Planned |
 | 4 | The Arena evaluator service (+ TEE) | ⏳ Planned |
@@ -176,7 +178,7 @@ Kept honest and up to date as the build progresses.
 
 | Component | Status |
 |---|---|
-| Smart contract on NEAR testnet | ⏳ Not yet built |
+| Smart contract on NEAR testnet | ✅ Real: deployed at `core.hivemind-ai.testnet`, 23 unit tests, full round verified on testnet with `scripts/smoke-test.sh` (smoke-test scores are hand-picked until The Arena evaluator lands) |
 | LoRA training and evaluation on a real model | ⏳ Not yet built |
 | Evaluator running inside a TEE | ⏳ Not yet built (will be labelled "simulated" if not completed) |
 | Paid inference | ⏳ Not yet built |
@@ -188,9 +190,17 @@ Kept honest and up to date as the build progresses.
 
 Development setup (toolchains, Python environment, testnet accounts): **[docs/SETUP.md](docs/SETUP.md)**.
 
-Testnet accounts used by this project live under `hivemind-ai.testnet` (owner and contract), with `evaluator.`, `operator.`, `user1.`, `alice.`, `bob.`, `carol.` and `mallory.` sub-accounts for the demo.
+Testnet accounts used by this project live under `hivemind-ai.testnet` (owner), with the contract at `core.hivemind-ai.testnet` and `evaluator.`, `operator.`, `user1.`, `alice.`, `bob.`, `carol.` and `mallory.` sub-accounts for the demo.
 
-Run instructions for each component will be added here as it lands.
+### Contract
+
+```bash
+cd contract && cargo test                  # unit tests
+scripts/deploy.sh                          # build + deploy to testnet (FRESH=1 wipes state)
+scripts/smoke-test.sh                      # run a full round on testnet with the demo accounts
+```
+
+Run instructions for the other components will be added here as they land.
 
 ---
 
