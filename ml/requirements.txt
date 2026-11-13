@@ -11,3 +11,6 @@ uvicorn[standard]
 websockets
 python-dotenv
 requests
+pynacl
+base58
+sse-starlette

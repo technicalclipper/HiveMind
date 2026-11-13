@@ -43,3 +43,4 @@ ml/cache/
 ml/results/*.tmp
 ml/results/pipeline.log
 evaluator/data/
+inference/data/
